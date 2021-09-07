@@ -11,8 +11,7 @@
   "require": {
     "beberlei/assert": "^3.3",
     "broadway/uuid-generator": "^1.0",
-    "php": "^8.0",
-    "micro-module/snapshotting": "^0.6.0"
+    "php": "^8.0"
   },
   "require-dev": {
     "roave/security-advisories": "dev-latest",
