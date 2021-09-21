@@ -69,11 +69,12 @@ abstract class EventSourcedAggregateRoot implements AggregateRootInterface
     }
 
     /**
-     * Initializes the aggregate from Snapshot object.
+     * Initializes the aggregate from Snapshot and "history" of events.
      */
-    public function initializeStateFromSnapshot(SnapshotInterface $snapshot): void
+    public function initializeStateFromSnapshot(SnapshotInterface $snapshot, DomainEventStream $stream): void
     {
         $this->playhead = $snapshot->getPlayhead();
+        $this->initializeState($stream);
     }
 
     /**
