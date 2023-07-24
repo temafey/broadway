@@ -1,6 +1,43 @@
 include .env
 export
 
+.DEFAULT_GOAL:=help
+
+.PHONY: dependencies
+dependencies:
+	docker-compose run --rm --no-deps php sh -lc './composer install --no-interaction --no-suggest --no-scripts --ansi'
+
+.PHONY: test
+test:
+	docker-compose run --rm --no-deps php sh -lc './vendor/bin/phpunit --testdox --exclude-group=none --colors=always'
+
+.PHONY: qa
+qa: php-cs-fixer-ci phpstan
+
+.PHONY: php-cs-fixer
+php-cs-fixer:
+	docker-compose run --rm --no-deps php sh -lc './vendor/bin/php-cs-fixer fix --no-interaction --allow-risky=yes --diff --verbose'
+
+.PHONY: php-cs-fixer-ci
+php-cs-fixer-ci:
+	docker-compose run --rm --no-deps php sh -lc './vendor/bin/php-cs-fixer fix --dry-run --no-interaction --allow-risky=yes --diff --verbose --stop-on-violation'
+
+PHONY: phpstan
+phpstan:
+	vdocker-compose run --rm --no-deps php sh -lc './endor/bin/phpstan analyse --level=5 src/'
+
+.PHONY: changelog
+changelog:
+	git log $$(git describe --abbrev=0 --tags)...HEAD --no-merges --pretty=format:"* [%h](http://github.com/${TRAVIS_REPO_SLUG}/commit/%H) %s (%cN)"
+
+.PHONY: license
+license:
+	docker-compose run --rm --no-deps php sh -lc './vendor/bin/docheader check --no-interaction --ansi -vvv {src,test,examples}'
+
+# Based on https://suva.sh/posts/well-documented-makefiles/
+help:  ## Display this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+
 sources = bin/console config src
 version = $(shell git describe --tags --dirty --always)
 build_name = application-$(version)
@@ -20,9 +57,9 @@ build: ## build environment and initialize composer and project dependencies
 	docker-compose build
 	docker-compose run --rm --no-deps php sh -lc 'composer install'
 
-.PHONY: stop
-stop:
-	docker-compose stop
+.PHONY: logs
+logs: ## look for service logs
+	docker-compose logs -f $(RUN_ARGS)
 
 .PHONY: composer-install
 composer-install: ## Install project dependencies
@@ -48,46 +85,3 @@ composer: ## Execute composer command
 phpunit: ## execute project unit tests
 	docker-compose run --rm php sh -lc  "./vendor/bin/phpunit $(conf)"
 
-.PHONY: phpstan
-phpstan: ## phpstan - PHP Static Analysis Tool
-	docker-compose run --rm --no-deps php sh -lc './vendor/bin/phpstan analyse -l 6 -c phpstan.neon src tests'
-
-.PHONY: psalm
-psalm: ## psalm is a static analysis tool for finding errors in PHP applications
-	docker-compose run --rm --no-deps php sh -lc './vendor/bin/psalm --config=psalm.xml'
-
-style: phpstan psalm ## executes php analizers
-
-.PHONY: lint
-lint: ## checks syntax of PHP files
-	docker-compose run --rm --no-deps php sh -lc './vendor/bin/parallel-lint ./ --exclude vendor --exclude bin/phpunit'
-
-.PHONY: logs
-logs: ## look for service logs
-	docker-compose logs -f $(RUN_ARGS)
-
-.PHONY: help
-help: ## Display this help message
-	    @cat $(MAKEFILE_LIST) | grep -e "^[a-zA-Z_\-]*: *.*## *" | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: php-shell
-php-shell: ## PHP shell
-	docker-compose run --rm php sh -l
-
-unit-tests: ## Run unit-tests suite
-	docker-compose run --rm php sh -lc 'vendor/bin/phpunit --testsuite broadway'
-
-static-analysis: style coding-standards ## Run phpstan, deprac, easycoding standarts code static analysis
-
-coding-standards: ## Run check and validate code standards tests
-	docker-compose run --rm --no-deps php sh -lc 'vendor/bin/ecs check src tests'
-	docker-compose run --rm --no-deps php sh -lc 'vendor/bin/phpmd src/ text phpmd.xml'
-
-coding-standards-fixer: ## Run code standards fixer
-	docker-compose run --rm --no-deps php sh -lc 'vendor/bin/ecs check src tests --fix'
-
-security-tests: ## The SensioLabs Security Checker
-	docker-compose run --rm --no-deps php sh -lc 'vendor/bin/security-checker security:check --end-point=http://security.sensiolabs.org/check_lock'
-
-.PHONY: test lint static-analysis phpunit coding-standards composer-validate
-test: build lint static-analysis coding-standards composer-validate stop ## Run all test suites

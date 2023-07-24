@@ -29,7 +29,6 @@ use Broadway\EventStore\TraceableEventStore;
 use Broadway\ReadModel\Projector;
 use Broadway\Repository\AggregateNotFoundException;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 abstract class AbstractEventSourcingRepositoryTest extends TestCase
 {
@@ -61,6 +60,7 @@ abstract class AbstractEventSourcingRepositoryTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider objectsNotOfConfiguredClass
      */
     public function it_throws_an_exception_when_adding_an_aggregate_that_is_not_of_the_configured_class($aggregate)
@@ -254,7 +254,7 @@ class TraceableEventstoreDecorator implements EventStreamDecorator
     public function getLastCall()
     {
         if (!$this->isCalled()) {
-            throw new RuntimeException('was never called');
+            throw new \RuntimeException('was never called');
         }
 
         return $this->calls[count($this->calls) - 1];

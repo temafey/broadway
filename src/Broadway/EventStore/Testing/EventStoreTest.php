@@ -33,6 +33,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_creates_a_new_entry_when_id_is_new($id)
@@ -51,6 +52,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_appends_to_an_already_existing_stream($id)
@@ -83,6 +85,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_throws_an_exception_when_requesting_the_stream_of_a_non_existing_aggregate($id)
@@ -94,6 +97,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_throws_an_exception_when_appending_a_duplicate_playhead($id)
@@ -111,9 +115,7 @@ abstract class EventStoreTest extends TestCase
      */
     public function it_throws_an_exception_when_an_id_cannot_be_converted_to_a_string()
     {
-        $id = new IdentityThatCannotBeConvertedToAString(
-            'Yolntbyaac' //You only live nine times because you are a cat
-        );
+        $id = new IdentityThatCannotBeConvertedToAString();
 
         if (PHP_VERSION_ID >= 70400) {
             $this->expectException(\Throwable::class);
@@ -131,6 +133,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_loads_events_starting_from_a_given_playhead($id)
@@ -169,6 +172,7 @@ abstract class EventStoreTest extends TestCase
 
     /**
      * @test
+     *
      * @dataProvider idDataProvider
      */
     public function it_returns_empty_event_stream_when_no_events_are_committed_since_given_playhead($id)
@@ -187,11 +191,11 @@ abstract class EventStoreTest extends TestCase
     {
         return [
             'Simple String' => [
-                'Yolntbyaac', //You only live nine times because you are a cat
+                'Yolntbyaac', // You only live nine times because you are a cat
             ],
             'Identitiy' => [
                 new StringIdentity(
-                    'Yolntbyaac' //You only live nine times because you are a cat
+                    'Yolntbyaac' // You only live nine times because you are a cat
                 ),
             ],
             'Integer' => [
@@ -239,10 +243,4 @@ class StringIdentity
 
 class IdentityThatCannotBeConvertedToAString
 {
-    private $id;
-
-    public function __construct($id)
-    {
-        $this->id = $id;
-    }
 }

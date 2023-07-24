@@ -21,15 +21,11 @@ interface Serializer
 {
     /**
      * @throws SerializationException
-     *
-     * @param mixed $object
      */
     public function serialize($object): array;
 
     /**
      * @throws SerializationException
-     *
-     * @return mixed
      */
     public function deserialize(array $serializedObject);
 }
