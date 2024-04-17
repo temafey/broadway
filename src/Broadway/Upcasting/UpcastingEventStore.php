@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Broadway\Upcasting;
 
 use Broadway\Domain\DomainEventStream;
+use Broadway\Domain\DomainMessage;
+use Broadway\EventSourcing\ShouldNotStoredEvent;
 use Broadway\EventStore\EventStore;
 use Broadway\EventStore\EventVisitor;
 use Broadway\EventStore\Management\Criteria;
@@ -38,8 +40,11 @@ final class UpcastingEventStore implements EventStore, EventStoreManagement
     private function upcastStream(DomainEventStream $eventStream, $id): DomainEventStream
     {
         $upcastedEvents = [];
-
+        /** @var DomainMessage $domainMessage */
         foreach ($eventStream as $domainMessage) {
+            if ($domainMessage->getPayload() instanceof ShouldNotStoredEvent) {
+                continue;
+            }
             $upcastedEvents[] = $this->upcasterChain->upcast($domainMessage);
         }
 

@@ -15,6 +15,7 @@ namespace Broadway\EventStore;
 
 use Broadway\Domain\DomainEventStream;
 use Broadway\Domain\DomainMessage;
+use Broadway\EventSourcing\ShouldNotStoredEvent;
 use Broadway\EventStore\ConcurrencyConflictResolver\ConcurrencyConflictResolver;
 use Broadway\EventStore\Exception\DuplicatePlayheadException;
 
@@ -53,6 +54,9 @@ final class ConcurrencyConflictResolvingEventStore implements EventStore
 
             /** @var DomainMessage $uncommittedEvent */
             foreach ($uncommittedEvents as $uncommittedEvent) {
+                if ($domainMessage->getPayload() instanceof ShouldNotStoredEvent) {
+                    continue;
+                }
                 foreach ($conflictingEvents as $conflictingEvent) {
                     if ($this->conflictResolver->conflictsWith($conflictingEvent, $uncommittedEvent)) {
                         throw $e;

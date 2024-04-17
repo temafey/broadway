@@ -15,6 +15,7 @@ namespace Broadway\EventStore;
 
 use Broadway\Domain\DomainEventStream;
 use Broadway\Domain\DomainMessage;
+use Broadway\EventSourcing\ShouldNotStoredEvent;
 use Broadway\EventStore\Exception\DuplicatePlayheadException;
 use Broadway\EventStore\Management\Criteria;
 use Broadway\EventStore\Management\EventStoreManagement;
@@ -71,6 +72,9 @@ final class InMemoryEventStore implements EventStore, EventStoreManagement
 
         /** @var DomainMessage $event */
         foreach ($eventStream as $event) {
+            if ($event->getPayload() instanceof ShouldNotStoredEvent) {
+                continue;
+            }
             $playhead = $event->getPlayhead();
 
             $this->events[$id][$playhead] = $event;
